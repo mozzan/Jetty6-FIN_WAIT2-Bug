@@ -1,0 +1,30 @@
+<configuration scan="true">
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- deny all events with a level below INFO, that is TRACE and DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+        <encoder>
+            <pattern>[%date{yyyy-MM-dd@HH:mm:ss.SSS}] %-5level %logger{20}: %msg%n</pattern>
+            <outputPatternAsHeader>false</outputPatternAsHeader>
+        </encoder>
+    </appender>
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="com.acme.jetty.problem" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="org.eclipse.jetty" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+</configuration>

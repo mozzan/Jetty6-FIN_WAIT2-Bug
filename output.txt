@@ -1,0 +1,8 @@
+Handler handler = new Handler(Looper.getMainLooper());
+			handler.post(new Runnable(){
+				public void run(){
+					String result = "Delete Cache spend : " +
+							(System.currentTimeMillis() - start) + " ms";
+					Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
+				}
+			});
