@@ -1,178 +1,61 @@
 package main.java.com.acme.jetty.problem;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.BasicClientConnectionManager;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
 
 public class TestClient {
-
-    private final URI uri;
-
-    private AtomicInteger num = new AtomicInteger(0);
-    private final SchemeRegistry schemeRegistry;
-
-    private TestClient(URI uri) throws IOException, GeneralSecurityException {
-        this.uri = uri;
+    private TestClient() throws IOException, GeneralSecurityException {
 
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, new TrustManager[] { new ClientX509TrustManager() }, null);
 
         SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslContext,
                 SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-
-        Scheme http = new Scheme("http", 80, PlainSocketFactory.getSocketFactory());
-        Scheme https = new Scheme("https", 888, sslSocketFactory);
-
-        schemeRegistry = new SchemeRegistry();
-        schemeRegistry.register(http);
-        schemeRegistry.register(https);
     }
 
     public static void main(String[] args) throws IOException, GeneralSecurityException, URISyntaxException {
-        for (String uri : args) {
-            new TestClient(new URI(uri)).run();
-        }
+    	if(args.length != 2) {
+    		return;
+    	}
+    	new TestClient().run(args[0], Integer.parseInt(args[1]));
     }
 
-    private void run() {
-        final int MAX_PING_DATA_SIZE = 0x10000;
+    private void run(final String url, final int pinCount) {
         final PrintStream OUT = System.out;
-        final int PING_COUNT = 1;
         final int THREAD_COUNT = 10;
-        final long SLEEP_SECONDS = 60;
-        final Random random = new Random();
 
+        OUT.println("ParallelPing starting...");
+        long time = System.currentTimeMillis();
+        ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_COUNT);
+        for (int i = 0; i < pinCount; i++) {
+        	final int num = i;
 
-        //while (true) {
-            OUT.println("ParallelPing starting...");
-            //ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_COUNT);
+        	threadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    OUT.println("#" + num + " Get : " + url);
+                	doGet(url);
+                }
+            });
 
-
-            long time = System.currentTimeMillis();
-            for (int i = 0; i < PING_COUNT; i++) {
-            	final int x = i;
-            	/*threadPool.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        int size = random.nextInt(MAX_PING_DATA_SIZE);
-                        StringBuilder data = new StringBuilder(size);
-                        for (int index = 0; index < size; index++) {
-                            data.append('x');
-                        }
-
-                        BasicClientConnectionManager connectionManager = new BasicClientConnectionManager(
-                                schemeRegistry);
-                        DefaultHttpClient httpClient = new DefaultHttpClient(connectionManager);
-
-                        try {
-                            ping(httpClient, uri, ContentType.TEXT_PLAIN, data.toString());
-                        } catch (IOException e) {
-                            OUT.println("Ping failed: " + e);
-                        }
-                        OUT.println("complete : " + num);
-                        num.addAndGet(1);
-                        //connectionManager.shutdown();
-                    }
-                });*/
-            	Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int size = random.nextInt(MAX_PING_DATA_SIZE);
-                        StringBuilder data = new StringBuilder(size);
-                        for (int index = 0; index < size; index++) {
-                            data.append('x');
-                        }
-
-                        BasicClientConnectionManager connectionManager = new BasicClientConnectionManager(
-                                schemeRegistry);
-                        DefaultHttpClient httpClient = new DefaultHttpClient(connectionManager);
-
-                        /*try {
-                        	OUT.println("Ping 1");
-                            ping(httpClient, uri, ContentType.TEXT_PLAIN, data.toString());
-                        } catch (IOException e) {
-                            OUT.println("Ping failed: " + e);
-                        }*/
-                        OUT.println("Get : " + x);
-                        //ping(httpClient, uri, ContentType.TEXT_PLAIN, data.toString());
-                    	doGet("http://192.168.195.51:8080");
-                        //connectionManager.shutdown();
-                    }
-                });
-            	thread.start();
-            }
-            //threadPool.shutdown();
-           // while (true) {
-                //try {
-                    //if (threadPool.awaitTermination(1, TimeUnit.SECONDS)) {
-                    //    break;
-                    //}
-                //} catch (InterruptedException e) {
-
-                //}
-            //}
-            long elapsed = System.currentTimeMillis() - time;
-            OUT.println("ParallelPing x " + PING_COUNT + " @ " + THREAD_COUNT + " threads = " + elapsed
-                    + " ms elapsed");
-            try {
-                OUT.println("ParallelPing sleeping...");
-                Thread.sleep(TimeUnit.SECONDS.toMillis(SLEEP_SECONDS));
-            } catch (InterruptedException e) {
-
-            }
-        //}
-    }
-
-    private static void sendHttpUriRequest(HttpClient httpClient, HttpUriRequest request) throws IOException {
-        HttpContext context = new BasicHttpContext();
-        HttpResponse response = httpClient.execute(request, context);
-        /*HttpEntity responseEntity = response.getEntity();
-        if (responseEntity != null) {
-            EntityUtils.consumeQuietly(responseEntity);
-        }*/
-    }
-
-    public static void ping(HttpClient httpClient, URI uri, ContentType contentType, String content)
-            throws IOException {
-        HttpGet requestHttpGet = new HttpGet(uri);
-        //requestHttpPost.setEntity(new StringEntity(content, contentType));
-
-        sendHttpUriRequest(httpClient, requestHttpGet);
+        }
+        threadPool.shutdown();
+        long elapsed = System.currentTimeMillis() - time;
+        OUT.println("ParallelPing complete... " + elapsed + "ms");
     }
 
     private static String doGet(String urlAsString) {
