@@ -18,7 +18,7 @@ java -jar Jetty6FINBug_tester.jar 127.0.0.1:8888 100
 Observation in linux :
 netstat | grep FIN_WAIT2
 
-The FIN_WAIT2 connections will be eliminated in 6 minutes with 7.6 jetty.
+The FIN_WAIT2 connections will be eliminated in 6 minutes with 7.6 jetty or remained forever with 6.X.
 
 
 
