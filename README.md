@@ -10,7 +10,7 @@ which seems to have fixed this issue.
 
 Test Usage :
 
-java -jar Jetty6FINBug_tester.jar URL Connection_Number
+java -jar Jetty6FINBug_tester.jar URL Number_of_Connections
 
 ex : 
 java -jar Jetty6FINBug_tester.jar 127.0.0.1:8888 100
