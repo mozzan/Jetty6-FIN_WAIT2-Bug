@@ -6,7 +6,7 @@ The bug is, if client never send FIN, jetty will remain the connection with
 FIN_WAIT2 state. Therefore, after a period of time, jetty will result in crash with too many files exceptions.
 
 This project only contains the test. However, people who want to solve this problem can upgrade jetty to 7.6, 
-which seems to have fixed this issue.
+which has fixed this issue.
 
 Test Usage :
 
